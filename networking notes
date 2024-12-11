@@ -1,0 +1,88 @@
+User space and sockets are for users, using programs like ssh uses user sockets
+RAW socket directly affects network devices and not accessed by user
+both are seen in wireshark and tcpdump
+Python used  to craft and modify RAW sockets for transmission
+lower case b makes string bytes-like-object example: message = b"hello world" makes it able to transmit over network
+import{module}, import{module}as{name}, from{module}import*
+socket.socket( *family*, type , proto) 
+stream socket sender demo
+  #!/usr/bin/python3  
+  import socket
+  s = socket.socket(socket.AF_INET, socket.SOCK_STREAM, 0)
+  ip_addr = '127.0.0.1'
+  port = 1111
+  s.connect((ip_addr, port))
+  message = b"Message"
+  s.send(message)
+  data, conn = s.recvfrom(1024)
+  print(data.decode('utf-8'))
+  s.close()
+vim stram.py, chmod +x stream.py, file stream.py to check if it has saved as python script
+ss -ntlp to find all sockets/ports
+datagram socket sender demo
+  #!/usr/bin/python3
+  import socket
+  s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, 0)
+  ip_addr = '127.0.0.1'
+  port = 2222
+  message = b"Message"
+  s.sendto(message, (ip_addr, port))
+  data, addr = s.recvfrom(1024)
+  print(data.decode())
+Encoding - process of taking bits and converting them using a specific cipher
+Decoding - reverse of the converiosn process used by the specified cipher for encoding
+Encryption - scrambles data to make it unreadable without a secret key
+encode to hex
+  echo "Message" | xxd
+encode file to hex
+  xxd file.txt file-encoded.txt
+decode file from hex
+  xxd -r file-encoded.txt file-decoded.txt
+
+python hex encoding
+  import binascii
+  message = b'message'
+  hidden_msg = binascii.hexlify(message)
+Encode text to base64:
+
+echo "Message" | base64
+
+Endode file to Base64:
+
+base64 file.txt > file-encoded.txt
+
+Decode file from Base64:
+
+base64 -d file-encoded.txt > file-decoded.txt
+    Obfuscating data during transfer
+
+    Manually crafting a packet with the chosen data in header fields
+
+Python Hex Encoding
+
+import binascii
+
+message = b'Message'
+hidden_msg = binascii.hexlify(message)
+
+Base64 Encoding and Decoding
+
+Encode text to base64:
+
+echo "Message" | base64
+
+Endode file to Base64:
+
+base64 file.txt > file-encoded.txt
+
+Decode file from Base64:
+
+base64 -d file-encoded.txt > file-decoded.txt
+
+Python Base64 Encoding
+
+import base64
+
+message = b'Message'
+hidden_msg = base64.b64encode(message)
+xxd converts to hexdump

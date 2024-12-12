@@ -86,3 +86,6 @@ import base64
 message = b'Message'
 hidden_msg = base64.b64encode(message)
 xxd converts to hexdump
+
+
+DAY 3

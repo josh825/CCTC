@@ -89,3 +89,219 @@ xxd converts to hexdump
 
 
 DAY 3
+Service and network discovery block
+
+4 stages - Passive/active External, passsive/active internal
+red space- hostile
+blue space- my space
+grey space - internet, be careful of other entities
+
+recon steps, network footprinting, scanning, enumeration and vulnerability assessment
+Footprinting- collect info on target. Network, systems, organizations
+scanning - port/network/vulnerabilities
+enumeration - find out resources/groups and users/auditing/services/protection like anitvirus. establish baseline
+vulnerability - injection, xml external sites, misconfiguration, known software vulnerabilities
+
+create a sock puppet
+fake account,fake name generator, person does not exist
+used to gain information
+helpful sites
+https://osintframework.com/
+https://map.malfrats.industries/
+https://start.me/p/rxekAP/osint-research
+http://www.pentest-standard.org/index.php/Intelligence_Gathering
+https://www.securitysift.com/passive-reconnaissance/
+
+PASSIVE RECON - open source intel, public info
+ip addresses, sub domains - arin.net/whois.domaintools.com/viewdns.info/dnsdumpster.com/centralops.net
+URL scans - sitereport.netcraft.com/web-check.xyz/web-check.as93.net/urlscan.io
+ip Geolocation - iplocation.io/iplocation.net/infosniper.net/maxmind.com
+BGP prefixes - bgpview.io/hackertarget.com/bgp.he.net/bgp4.as
+id external/3rd party sites
+id people, technologies in network, vulnerabilites
+id content of interests
+ping one ip - ping <ip> -c 1
+ping a range - for i in {1..254}; do (ping -c 1 <ip>.$i | grep "bytes from" &) ; done
+
+NMAP DEFAULTS
+User:TCP full connect scan -sT
+Root: TCP SYN scan -sS
+Default ports scanned 1000 most commonly used TCP or UDP ports, not the 1024 known prots
+status on ports - open, closed, filtered, unfiltered, open|filtered, closedd|filtered
+options: syn -sS,full connect sT,null sN,FIN sF,Xmas tree sX,UDP sU,idle sL uses a zombie to obuscate
+scan types - Decoy -D, ACK/Window -sA, RPC -sR, OS fingerprint -O, version -sV, discovery probes
+-PE icmp scan, -Pn no ping
+time out  -T0 - paranioid - 300 sec
+          -T1 - Sneaky -15 sec
+          -T2 - polite - 1 sec
+          -T3 - normal - 1 sec
+          -T4 - Aggressive - 500 ms
+          -T5 - insane - 250ms dont do in the fleet, learn about enviornment first before using
+--(max-)scan-delay <time> max/min delay between probes
+
+NETCAT
+-z: port scan mode
+-v: be verbose -vv for more verbose
+-n: do not resolve ip
+-w1: set  time out value to 1
+-u: to switch to UDP
+for i in {1..254}; do nc -nvzw1 <ip>.$i 20-23 80 2>&1 & done | grep -E 'succ|open'
+for i in {1..254}; do nc -nuvzw1 <ip>.$i 1000-2000 2>&1 & done | grep -E 'succ|open'
+
+Netcat - Vertical Scanning
+
+    Range of ports on specific IP
+
+    TCP
+
+nc -nzvw1 172.16.82.106 21-23 80 2>&1 | grep -E 'succ|open'
+
+    UDP
+
+nc -nuzvw1 172.16.82.106 1000-2000 2>&1 | grep -E 'succ|open'
+
+Netcat - TCP Scan Script
+
+  #!/bin/bash
+  echo "Enter network address (e.g. 192.168.0): "
+  read net
+  echo "Enter starting host range (e.g. 1): "
+  read start
+  echo "Enter ending host range (e.g. 254): "
+  read end
+  echo "Enter ports space-delimited (e.g. 21-23 80): "
+  read ports
+  for ((i=$start; $i<=$end; i++))
+  do
+      nc -nvzw1 $net.$i $ports 2>&1 | grep -E 'succ|open'
+  done
+
+Describe Methods Used for Passive Internal Discovery
+recon3
+Packet Sniffers
+
+    Wireshark
+
+    Tcpdump
+
+    p0f
+
+Limited to traffic in same local area of the network
+Describe Methods Used for Active Internal Discovery
+recon4
+7.23
+Netcat - Horizontal ScanningRange of IPs for specific portsTCP for i in {1..254}; do nc -nvzw1 172.16.82.$i 20-23 80 2>&1 & done | grep -E 'succ|open' UDP for i in {1..254}; do nc -nuvzw1 172.16.82.$i 1000-2000 2>&1 & done | grep -E 'succ|open'
+
+BANNER GRABBING
+nc [Target IP] [Target Port]
+nc 172.16.82.106 22
+nc -u 172.16.82.106 53
+-u to swithch to udp
+try to type something if comes up blank, usually doesnt matter what you type
+
+ACCESS WEB PAGE
+curl and wget
+curl - display ASCII
+curl http://<ip>
+curl ftp://<ip>
+Wget - Downloads -r recursive
+wget -r http://<ip>
+wget -r ftp://<ip>
+
+ipconfiguration
+Windows: ipconfig /all
+Linux: ip address (ifconfig depreciated)
+VyOS: show interface
+
+dns config
+Windows: ipconfig /displaydns
+Linux: cat /etc/resolv.conf
+
+aWindows: arp -a
+Linux: ip neighbor (arp -a depreciated)rp cache
+
+Network connections
+Windows: netstat
+Linux: ss (netstat depreciated)
+
+Example options useful for both netstat and ss: -antp
+a = Displays all active connections and ports.
+n = No determination of protocol names. Shows 22 not SSH.
+t = Display only TCP connections.
+u = Display only UDP connections.
+p = Shows which processes are using which sockets.
+
+quad zero is wildcard, any ip can connect to the port associated
+127.0.0.1 is only accessable from local machine
+
+Services file
+Windows: %SystemRoot%\system32\drivers\etc\services
+Linux/Unix: /etc/services
+
+OS info
+Windows: systeminfo
+Linux: uname -a and /etc/os-release
+
+Running processes
+Windows: tasklist
+Linux: ps or top
+
+Example options useful for ps: -elf
+e = Show all running processes
+l = Show long format view
+f = Show full format listing
+
+Command Path
+which
+whereis
+
+Routing Table
+Windows: route print
+Linux: ip route (netstat -r deprecated)
+VyOS: show ip route
+
+File search
+find / -name hint* 2> /dev/null
+find / -iname flag* 2> /dev/null
+
+SSH config
+Windows: C:\Windows\System32\OpenSSH\sshd_config
+Linux: /etc/ssh/sshd_config
+
+ACTIVE INTERNAL RECON  
+
+ARP SCAN
+arp-scan --interface=eth0 --localnet
+nmap -sP -PR 172.16.82.96/27
+
+PING SCAN
+ping -c 1 172.16.82.106
+for i in {1..254}; do (ping -c 1 172.16.82.$i | grep "bytes from" &) ; done
+sudo nmap -sP 172.16.82.96/27
+
+DEV TCP BANNER GRAB
+exec 3<>/dev/tcp/172.16.82.106/22; echo -e "" >&3; cat <&3
+
+DEV TCP SCAN
+for p in {1..1023}; do(echo >/dev/tcp/172.16.82.106/$p) >/dev/null 2>&1 && echo "$p open"; done
+
+NETWORK FORENSICS
+diagram, line types, writen info, coloring, groupings
+Mapping
+-device type
+-system host names
+-interface names 
+-ip address and CIDRs for all interfaces
+-tcp and udp ports
+-MAC address
+-OS type/version
+-Known credentials
+Mapping Tools
+    Draw.io Local (Template)
+    Draw.io Web
+    Witeboard.com
+    Draw.Chat
+    SmartDraw
+    Ziteboard
+    Tutorialspoint Whiteboard
+    Explain Everything Whiteboard

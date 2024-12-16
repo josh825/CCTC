@@ -1,1 +1,296 @@
+Tunneling - encapsulates a protocol inside another protocol
+Encapsulation, Transmission, Decapsulation
+IPv6 over IPv4, Dual stack, 6in4, 6to4, 4in6, Teredo, ISATAP
+Traffic Tunneling - used for the ipv4 to 6 migration
+Tunneling Malware and attacks - bypass ipv4 based security measures
+RFC 3056, permits ipv6 to be encapsulated in order to move through a ipv4 network
+- done by dual stack router
+- payload is not generally encrypted
+- IPSEC commonly used to secure payloads
+ISATAP
+allows ipv6 hosts to communicate over ipv4 network within a site
 
+CONVERT CHANNELS
+using common and legitamite protocols to transfer data in illegitamite ways
+info contrary to design intent
+bypass security, leaks sensitive data
+
+types 
+storage
+payload + header(IP/TCP header)
+timing - modify transmissions of legitimate traffic, delay packet between nodes, watch TTL changes, Watch for variances between transmissions
+Common forms - ICMP, DNS, HTTP
+detect covert channels
+host analysuis, requires knowledte of applications expected behavior
+
+ICMP
+one request, one reply system
+- type 8 code 0 request
+- type 0 code 0 request
+check for
+ - payload imbalance
+ - request/responce imbalance
+ - large payloads in responce
+Tools
+ - ptunnel, Loki, 007shell, ICMP backdoor, BOCK, HANS
+
+DNS
+request/responce protocol
+1 request gets 1 respnce
+payload no bigger than 512 bytes
+check for
+ - request/responce imbalance
+ - unusual payloads
+ - Burstiness or continuous use
+tools
+ - OzymanDNS, NSTX, dns2tcp, iodine, heyoka, dnscat2
+
+HTTP
+GET request may include .png, .exe, .(anything) files
+can vary in sizes of payloads
+typically Bursty but not steady
+tools
+- tunnelshelltools, HTTPTunnel, SirTunnel, go HTTP tunnel
+
+Steganography
+hiding messages inside legitimate information objects
+injection, substitution, propagation
+-injection, inserting messages into the unused whitespace of the file, usually a  graphic
+-second most common
+-adds size to file
+-hard to detect unless you have original file
+tools: StegHide
+
+-substitution, inserting message into the insignificant portion of the file
+-most common
+elements within a digital medium are replaced with hidden informaion
+-example: change color pallate
+
+-propagation, generates new file entirely, needs special software to manipulate file
+-tools: StegSecret, HyDEn, Spammimic
+
+SSH
+various implementations
+provides auth, encrypt, and integrity
+allows remote terminal sessions
+enable x11 forwarding
+used for tunneling and port forwarding
+proxy connections
+Client vs Server vs Session
+keys: User, Host, and Session key
+config files: /etc/ssh/ssh_config
+
+SSH PORT FORWARDING
+creates cahnnels using SSH-CONN
+-L creates port on client maped to a ip:port via the server
+-D creates port on the client and sets up a SOCKS4 proxy tunnel where the target ip:ports is specified dynamically
+-R creates teh port on the server mapped to a ip:port via the client
+-NT do not execute a remote command and disable pseudo-tty (will hang window)
+LOCAL PORT FORWARDING
+ssh -p <optional alt port> <user>@<server ip> -L <local bind port>:<tgt ip>:<tgt port>
+
+or
+
+ssh -L <local bind port>:<tgt ip>:<tgt port> -p <alt port> <user>@<server ip>
+
+LOCAL PORT FORWARD TO LOCALHOST OF SERVER
+Internet_Host:
+ssh student@172.16.1.15 -L 1122:localhost:22
+or
+ssh -L 1122:localhost:22 student@172.16.1.15
+Internet_Host:
+ssh student@localhost -p 1122
+Blue_DMZ_Host-1~$
+
+Internet_Host:
+ssh student@172.16.1.15 -L 1123:localhost:23
+or
+ssh -L 1123:localhost:23 student@172.16.1.15
+Internet_Host:
+telnet localhost 1123
+Blue_DMZ_Host-1~$
+
+Internet_Host:
+ssh student@172.16.1.15 -L 1180:localhost:80
+or
+ssh -L 1180:localhost:80 student@172.16.1.15
+Internet_Host:
+firefox http://localhost:1180
+{Webpage of Blue_DMZ_Host-1}
+
+LOCAL PORT FORWARD TO REMOTE TARGET VIA SERVER
+Internet_Host:
+ssh student@172.16.1.15 -L 2222:172.16.40.10:22
+or
+ssh -L 2222:172.16.40.10:22 student@172.16.1.15
+Internet_Host:
+ssh student@localhost -p 2222
+Blue_INT_DMZ_Host-1~$
+
+Internet_Host:
+ssh student@172.16.1.15 -L 2223:172.16.40.10:23
+or
+ssh -L 2223:172.16.40.10:23 student@172.16.1.15
+Internet_Host:
+telnet localhost 2223
+Blue_INT_DMZ_Host-1~$
+
+Internet_Host:
+ssh student@172.16.1.15 -L 2280:172.16.40.10:80
+or
+ssh -L 2280:172.16.40.10:80 student@172.16.1.15
+Internet_Host:
+firefox http://localhost:2280
+{Webpage of Blue_INT_DMZ_Host-1}
+
+FOWARD THROUGH TUNNEL
+Internet_Host:
+ssh student@172.16.1.15 -L 2222:172.16.40.10:22
+ssh student@localhost -p 2222 -L 3322:172.16.82.106:22
+Internet_Host:
+ssh student@localhost -p 3322
+Blue_Host-1~$
+
+DYNAMIC PROT FORWARDING
+creates a dynamic socks4 proxy that interacts alone, or with a previously established remote or local port forward
+allows the use of scripts and other userspace programs through the tunnel
+ssh <user>@<server ip> -p <alt port> -D <port>
+or
+ssh -D <port> -p <alt port> <user>@<server ip>
+
+Step 1
+Internet_Host:
+ssh student@172.16.1.15 -D 9050
+or
+ssh -D 9050 student@172.16.1.15
+
+Internet_Host:
+proxychains ./scan.sh
+proxychains nmap -Pn 172.16.40.0/27 -p 21-23,80
+proxychains ssh student@172.16.40.10
+proxychains telnet 172.16.40.10
+proxychains wget -r http://172.16.40.10
+proxychains wget -r ftp://172.16.40.10
+
+STEP 2
+Internet_Host:
+ssh student@172.16.1.15 -L 2222:172.16.40.10:22
+or
+ssh -L 2222:172.16.40.10:22 student@172.16.1.15
+Internet_Host:
+ssh student@localhost -p 2222 -D 9050
+or
+ssh -D 9050 student@localhost -p 2222
+
+Internet_Host:
+proxychains ./scan.sh
+proxychains nmap -Pn 172.16.82.96/27 -p 21-23,80
+proxychains ssh student@172.16.82.106
+proxychains telnet 172.16.82.106
+proxychains wget -r http://172.16.82.106
+proxychains wget -r ftp://172.16.82.106
+
+REMOTE PORT FOWARDING
+ssh -p <optional alt port> <user>@<server ip> -R <remote bind port>:<tgt ip>:<tgt port>
+
+or
+
+ssh -R <remote bind port>:<tgt ip>:<tgt port> -p <alt port> <user>@<server ip>
+
+Blue_DMZ_Host-1:
+ssh student@10.10.0.40 -R 4422:localhost:22
+or
+ssh -R 4422:localhost:22 student@10.10.0.40
+Internet_Host:
+ssh student@localhost -p 4422
+Blue_DMZ_Host-1~$
+
+Blue_DMZ_Host-1:
+ssh student@10.10.0.40 -R 4423:localhost:23
+or
+ssh -R 4423:localhost:23 student@10.10.0.40
+Internet_Host:
+telnet localhost 4423
+Blue_DMZ_Host-1~$
+
+Remote Port Forwarding from localhost of client
+
+remote2
+Remote Port Forwarding from localhost of client
+
+Blue_DMZ_Host-1:
+ssh student@10.10.0.40 -R 4480:localhost:80
+or
+ssh -R 4480:localhost:80 student@10.10.0.40
+
+Internet_Host:
+firefox http://localhost:4480
+{Webpage of Blue_DMZ_Host-1}
+
+Combining Local and Remote Port Forwarding
+Bridging Local and Remote Port Forwarding
+
+Internet_Host:
+ssh student@172.16.1.15 -L 2223:172.16.40.10:23
+or
+ssh -L 2223:172.16.40.10:23 student@172.16.1.15
+Internet_Host:
+telnet localhost 2223
+Blue_INT_DMZ_Host-1~$
+
+Blue_DMZ_Host-1:
+ssh student@10.10.0.40 -R 4480:localhost:80
+or
+ssh -R 4480:localhost:80 student@10.10.0.40
+Internet_Host:
+firefox http://localhost:4480
+{Webpage of Blue_DMZ_Host-1}
+
+Blue_DMZ_Host-1:
+ssh student@10.10.0.40 -R 5522:172.16.40.10:22
+or
+ssh -R 5522:172.16.40.10:22 student@10.10.0.40
+Internet_Host:
+ssh student@localhost -p 5522
+Blue_INT_DMZ_Host-1~$
+
+REMOTE PORT FORWARDING TO REMOTE TARGET VIA CLIENT
+Blue_DMZ_Host-1:
+ssh student@10.10.0.40 -R 5523:172.16.40.10:23
+or
+ssh -R 5523:172.16.40.10:23 student@10.10.0.40
+Internet_Host:
+telnet localhost 5523
+Blue_INT_DMZ_Host-1~$
+
+BRIDGING LOCAL AND REMOTE PORT FORWARDING
+Internet_Host:
+ssh student@172.16.1.15 -L 2223:172.16.40.10:23
+or
+ssh -L 2223:172.16.40.10:23 student@172.16.1.15
+Internet_Host:
+telnet localhost 2223
+Blue_INT_DMZ_Host-1~$
+
+Blue_INT_DMZ_Host-1:
+ssh student@172.16.1.15 -R 1122:localhost:22
+or
+ssh -R 1122:localhost:22 student@172.16.1.15
+
+Internet_Host:
+ssh student@172.16.1.15 -L 2222:localhost:1122
+or
+ssh -L 2222:localhost:1122 student@172.16.1.15
+
+Internet_Host:
+ssh student@localhost -p 2222 -D 9050
+or
+ssh -D 9050 student@localhost -p 2222
+
+Internet_Host:
+proxychains ./scan.sh
+proxychains nmap -Pn -sT 172.16.82.96/27 -p 21-23,80
+proxychains ssh student@172.16.82.106
+proxychains telnet 172.16.82.106
+proxychains wget -r http://172.16.82.106
+proxychains wget -r ftp://172.16.82.106

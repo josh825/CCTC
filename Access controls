@@ -599,7 +599,7 @@ num  target     prot opt source               destination
 5    ACCEPT     udp  --  anywhere             anywhere             multiport ports 6579,4444
 6    ACCEPT     tcp  --  anywhere             anywhere             multiport ports 6579,4444
 
-
+sudo iptables -t nat POSTROUTING -o eth0 -s 192.168.1.10 -j 
 
 
 
